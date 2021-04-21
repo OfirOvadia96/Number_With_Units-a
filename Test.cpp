@@ -4,15 +4,19 @@
 using namespace std;
 using namespace ariel;
 
-/* */
+/* Auxiliary function for selecting random units of measure*/
 string random_type(){
     array<string,11> types = {"km" , "cm" , "m" , "ton" , "kg" , "g" , "USD" , "ILS",
     "hour" , "min" , "sec"};
     string random_type = types.at(rand()%11); //random type from the list types
     return random_type;
 }
+
 /*check all the boolean operators */
 TEST_CASE("Boolean operators"){
+
+    ifstream file{"units.txt"};
+    NumberWithUnits::read_units(file);
 
     NumberWithUnits ton (1 , "ton");
     NumberWithUnits kg (1000 , "kg");
@@ -36,7 +40,7 @@ TEST_CASE("Boolean operators"){
     CHECK_FALSE(ton != kg); 
     CHECK_FALSE(min != hours); 
 
-    /* checks operator <  */
+    /* checks operator <  and != and <=  */
     for(int i=0; i<100; i++){
         double less_then_km = rand()%1000; // 0 - 999
         double less_then_dolar = double(rand()%4 + 0.32); // 0 - 3.32
@@ -52,8 +56,18 @@ TEST_CASE("Boolean operators"){
         CHECK(shekel < dolar);
         CHECK(min < hours);
         CHECK(kg < ton);
+
+        CHECK(m != km);
+        CHECK(shekel != dolar);
+        CHECK(min != hours);
+        CHECK(kg != ton);
+
+        CHECK(m <= km);
+        CHECK(shekel <= dolar);
+        CHECK(min <= hours);
+        CHECK(kg <= ton);
     }
-    /* checks operator >  and != */
+    /* checks operator >  and != and >=  */
     for(int i=0; i<100; i++){
         double big_then_km = rand()%INTMAX_MAX + 1001; // 1001 - max_int
         double big_then_dolar = rand()%INTMAX_MAX + 3.34; //3.34 - mat_int
@@ -70,6 +84,11 @@ TEST_CASE("Boolean operators"){
         CHECK(min > hours);
         CHECK(kg > ton);
         
+        CHECK(m >= km);
+        CHECK(shekel >= dolar);
+        CHECK(min >= hours);
+        CHECK(kg >= ton);
+
         CHECK(m != km);
         CHECK(shekel != dolar);
         CHECK(min != hours);
@@ -91,7 +110,7 @@ TEST_CASE("Boolean operators"){
     CHECK_FALSE(seconds != min); 
     CHECK_FALSE(gram != kg); 
 
-    /* check operator < and != */
+    /* check operator < and != and <=  */
     for(int i=0; i<100; i++){
         double less_then_m = rand()%100; // 0- 99
         double less_then_min = rand()%60; // 0 - 59
@@ -105,11 +124,15 @@ TEST_CASE("Boolean operators"){
         CHECK(seconds < min);
         CHECK(gram < kg);
 
+        CHECK(cm <= m);
+        CHECK(seconds <= min);
+        CHECK(gram <= kg);
+
         CHECK(cm != m);
         CHECK(seconds != min);
         CHECK(gram != kg);
    }
-    /* check operator > and !=  */
+    /* check operator > and != and >=  */
     //big then bigger unit 
     for(int i=0; i<100; i++){
         double big_then_m = rand()%INTMAX_MAX + 101; // 101 - max_int
@@ -124,6 +147,10 @@ TEST_CASE("Boolean operators"){
         CHECK(seconds > min);
         CHECK(gram > kg);
 
+        CHECK(cm >= m);
+        CHECK(seconds >= min);
+        CHECK(gram >= kg);
+
         CHECK(cm != m);
         CHECK(seconds != min);
         CHECK(gram != kg);
@@ -131,6 +158,9 @@ TEST_CASE("Boolean operators"){
 }
 
 TEST_CASE("operators add + /sub -  for two NumberWithUnits"){
+    ifstream file{"units.txt"};
+    NumberWithUnits::read_units(file);
+
     NumberWithUnits ton (1 , "ton");
     NumberWithUnits kg (1000 , "kg");
     NumberWithUnits gram(1000 , "g");
@@ -291,6 +321,9 @@ TEST_CASE("operators add + /sub -  for two NumberWithUnits"){
 
 /*check operators ++ , --  */
 TEST_CASE("self math operators"){
+    ifstream file{"units.txt"};
+    NumberWithUnits::read_units(file);
+
     double random_value = rand()%INTMAX_MAX +1; // 1-max_int
     string rand_type = random_type();
     
@@ -313,6 +346,9 @@ TEST_CASE("self math operators"){
 
 /* check operators *= , *   */
 TEST_CASE("multiply operators"){
+    ifstream file{"units.txt"};
+    NumberWithUnits::read_units(file);
+
     string rand_type = random_type();
     double random_value = rand()%INTMAX_MAX; // 0-max_int
     double multiplier = rand()%INTMAX_MAX; //0- max_int
@@ -335,6 +371,9 @@ TEST_CASE("multiply operators"){
 }
     /*check operators +(), -() */
 TEST_CASE("unary operrators"){
+    ifstream file{"units.txt"};
+    NumberWithUnits::read_units(file);
+
     string rand_type = random_type();
     double random_value = rand()%INTMAX_MAX; // 0 - max_int
         
@@ -351,5 +390,160 @@ TEST_CASE("unary operrators"){
         current.set_value(random_value);
         should_be.set_value(random_value);
     }
+}
 
+TEST_CASE("operators += , -= "){
+    ifstream file{"units.txt"};
+    NumberWithUnits::read_units(file);
+    double random_value = rand()%INTMAX_MAX;
+    //weights:
+    NumberWithUnits ton (random_value , "ton");
+    NumberWithUnits kg (random_value , "kg");
+    NumberWithUnits gram(random_value, "g");
+    NumberWithUnits ans_weights(random_value+(random_value/1000), "ton");
+
+    for(int i=0; i<50; i++){
+        ans_weights.set_value(ton.get_value());
+        ans_weights.set_type(ton.get_type());
+        ton+= kg;
+        ton-= kg;
+        CHECK(ton == ans_weights);
+
+        ans_weights.set_type(kg.get_type());
+        ans_weights.set_value(kg.get_value());
+        kg+= ton;
+        kg-= ton;
+        CHECK(kg == ans_weights);
+        
+        kg+= gram;
+        kg-= gram;
+        CHECK(kg == ans_weights);
+        
+        ans_weights.set_type(gram.get_type());
+        ans_weights.set_value(gram.get_value());
+        gram+= kg;
+        gram-= kg;
+        CHECK(gram == ans_weights);
+
+        random_value = rand()%INTMAX_MAX;
+        ton.set_value(random_value);
+        kg.set_value(random_value);
+        gram.set_value(random_value);
+    }
+    
+    //time:
+    NumberWithUnits hours(random_value, "hours");
+    NumberWithUnits min(random_value, "min");
+    NumberWithUnits seconds(random_value ,"sec");
+    NumberWithUnits ans_time(random_value ,"hours");
+
+    for(int i=0; i<50; i++){
+        ans_time.set_value(hours.get_value());
+        ans_time.set_type(hours.get_type());
+        hours+= min;
+        hours-= min;
+        CHECK(hours == ans_time);
+
+        ans_time.set_value(min.get_value());
+        ans_time.set_type(min.get_type());
+        min+= hours;
+        min-= hours;
+        CHECK(min == ans_time);
+        
+        min+= seconds;
+        min-= seconds;
+        CHECK(min == ans_time);
+        
+        ans_time.set_value(seconds.get_value());
+        ans_time.set_type(seconds.get_type());
+        seconds+= min;
+        seconds-= min;
+        CHECK(seconds == ans_time);
+
+        random_value = rand()%INTMAX_MAX;
+        hours.set_value(random_value);
+        min.set_value(random_value);
+        seconds.set_value(random_value);
+    }
+    
+    //money:
+    NumberWithUnits shekel(random_value,"ILS");
+    NumberWithUnits dolar(random_value,"USD");
+    NumberWithUnits ans_money(random_value,"ILS");
+    
+    for(int i=0; i<50; i++){
+        ans_money.set_type(shekel.get_type());
+        ans_money.set_value(shekel.get_value());
+        shekel+=dolar;
+        shekel-=dolar;
+        CHECK(shekel == ans_money);
+        
+        ans_money.set_type(dolar.get_type());
+        ans_money.set_value(dolar.get_value());
+        dolar+=shekel;
+        dolar-=shekel;
+        CHECK(dolar == ans_money);
+
+        random_value = rand()%INTMAX_MAX;
+        dolar.set_value(random_value);
+        shekel.set_value(random_value);
+    }
+
+    //dist:
+    NumberWithUnits km(random_value , "km");
+    NumberWithUnits m(random_value , "m");
+    NumberWithUnits cm(random_value , "cm");
+    NumberWithUnits ans_dist(random_value , "km");
+    for(int i=0; i<50; i++){
+        ans_dist.set_value(km.get_value());
+        ans_dist.set_type(km.get_type());
+        km+= m;
+        km-= m;
+        CHECK(km == ans_dist);
+
+        ans_dist.set_value(m.get_value());
+        ans_dist.set_type(m.get_type());
+        m+= km;
+        m-= km;
+        CHECK(m == ans_dist);
+        
+        m+= cm;
+        m-= cm;
+        CHECK(m == ans_dist);
+        
+        ans_dist.set_value(cm.get_value());
+        ans_dist.set_type(cm.get_type());
+        cm+= m;
+        cm-= m;
+        CHECK(cm == ans_dist);
+
+        random_value = rand()%INTMAX_MAX;
+        km.set_value(random_value);
+        m.set_value(random_value);
+        cm.set_value(random_value);
+    }
+}
+
+/* check operators << and >>  */
+TEST_CASE("I/O operators"){
+
+}
+
+/* Auxiliary function for choose random worng_type (upper letters)*/
+string random_worng_type(unsigned int n){
+    string upper_letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const int SIZE = 26;
+    string ran;
+    for(int i=0; i<n; i++){
+        ran = ran + upper_letter.at(rand() % SIZE);
+    }
+    return ran;
+}
+
+/* check worng types */
+TEST_CASE("worng constructor"){
+    double number_ran = rand()%10;
+    for(int i=0; i<50; i++){
+        CHECK_THROWS(NumberWithUnits(number_ran, random_worng_type(number_ran)));
+    }
 }

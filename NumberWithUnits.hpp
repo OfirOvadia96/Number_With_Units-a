@@ -44,6 +44,7 @@ namespace ariel{
         friend bool operator!=(const NumberWithUnits& num1 , const NumberWithUnits& num2);
         NumberWithUnits& operator++();
         friend NumberWithUnits operator++(NumberWithUnits& num);
+        friend NumberWithUnits operator--(NumberWithUnits& num);
         NumberWithUnits& operator--();
         //multiplication
         NumberWithUnits& operator*=(double real);
