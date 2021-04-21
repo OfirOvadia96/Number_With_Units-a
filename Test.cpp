@@ -526,12 +526,19 @@ TEST_CASE("operators += , -= "){
 
 /* check operators << and >>  */
 TEST_CASE("I/O operators"){
-
+    ifstream file{"units.txt"};
+    NumberWithUnits::read_units(file);
+    double ranom_value = rand()%INTMAX_MAX;
+    NumberWithUnits any_type(ranom_value,random_type());
+    for(int i=0; i<50; i++){
+        CHECK_NOTHROW(cout << any_type << endl);
+        ranom_value = rand()%INTMAX_MAX;
+    }
 }
 
 /* Auxiliary function for choose random worng_type (upper letters)*/
 string random_worng_type(unsigned int n){
-    string upper_letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    string upper_letter = "ABCdEFGHiJKlMNOPQRsTuVWXYZ";
     const int SIZE = 26;
     string ran;
     for(int i=0; i<n; i++){
@@ -542,6 +549,9 @@ string random_worng_type(unsigned int n){
 
 /* check worng types */
 TEST_CASE("worng constructor"){
+    ifstream file{"units.txt"};
+    NumberWithUnits::read_units(file);
+
     double number_ran = rand()%10;
     for(int i=0; i<50; i++){
         CHECK_THROWS(NumberWithUnits(number_ran, random_worng_type(number_ran)));
